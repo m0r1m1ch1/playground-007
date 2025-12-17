@@ -1,0 +1,46 @@
+---
+import { SITE_NAME, SITE_URL } from '@/utils/sitemap';
+
+type Props = {
+  title: string;
+  description: string;
+  pathname: string;
+  isHome?: boolean;
+  ogImage?: string;
+  noIndex?: boolean;
+};
+
+const { title, description, pathname, isHome, ogImage: _ogImage, noIndex } = Astro.props;
+
+const ogImage = _ogImage ? `${_ogImage}?w=1200&h=630` : `${SITE_URL || ''}/og.png`;
+const twitterImage = _ogImage ? `${_ogImage}?w=1200&h=675` : `${SITE_URL || ''}/summary-large-image.png`;
+---
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width" />
+{noIndex && <meta name="robots" content="noindex" />}
+<title>{title}</title>
+<meta name="description" content={description} />
+
+<meta property="og:type" content={isHome ? 'website' : 'article'} />
+<meta property="og:locale" content="ja_JP" />
+<meta property="og:site_name" content={SITE_NAME} />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={`${SITE_URL || ''}${pathname}`} />
+<meta property="og:image" content={ogImage} />
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content={twitterImage} />
+<link rel="canonical" href={`${SITE_URL || ''}${pathname}`} />
+
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&family=Noto+Serif+JP:wght@200..900&display=swap"
+  rel="stylesheet"
+/>

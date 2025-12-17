@@ -1,0 +1,23 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout>
+  <div class="home"></div>
+</Layout>
+
+<script>
+  import { visitState } from '@/utils/visitState';
+
+  class Home {
+    constructor() {
+      this.init();
+    }
+
+    init() {
+      const value = visitState.isNewSession();
+      console.log('home', value);
+    }
+  }
+  new Home();
+</script>

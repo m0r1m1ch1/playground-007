@@ -1,0 +1,54 @@
+@use '../extension' as *;
+@use '../extension/variables' as var;
+
+:root {
+  --viewport-width: 100vw;
+  --window-width: calc(tan(atan2(var(--viewport-width), 1px)));
+  --scrollbar-width: 0px;
+  --scroll-offset: 0px;
+  --header-height: 0px;
+  --scroll-position: 0px;
+
+  @if var.$full-liquid {
+    --mw: max(#{var.$max-width}px, #{calc(var.$max-width / var.$rem)}rem);
+    --max: calc(tan(atan2(var(--mw), 1px)));
+    --scale: max(1, var(--window-width) / var(--max));
+    --px: #{calc(1px * var(--scale))};
+    --rem: #{calc(1rem * var(--scale))};
+  }
+
+  --max-width: #{max(px(var.$max-width), rem(var.$max-width))};
+  --grid-gutter: #{fluid-size(375, 1440, 20, 40, 'px')};
+
+  // fonts
+  --base-font:
+    'Hiragino Sans', 'ヒラギノ角ゴ ProN', 'Hiragino Kaku Gothic ProN', 'Hiragino Kaku Gothic Pro', 'メイリオ', meiryo,
+    'MS Pゴシック', 'MS PGothic', sans-serif;
+  --fz-root: #{fluid-size(375, 1440, 15, 16, 'rem')};
+  --fz-lg: #{fluid-size(375, 1440, 18, 20, 'rem')};
+  --fz-md: #{fluid-size(375, 1440, 16, 18, 'rem')};
+  --fz-sm: #{fluid-size(375, 1440, 13, 14, 'rem')};
+  --fz-xs: #{fluid-size(375, 1440, 11, 12, 'rem')};
+
+  // color
+  --white: #fff;
+  --black: #222;
+
+  @media (prefers-reduced-motion: no-preference) {
+    --duration: 1s;
+  }
+}
+
+@property --viewport-width {
+  syntax: '<length>';
+  initial-value: 0;
+  inherits: false;
+}
+
+@if var.$full-liquid {
+  @property --mw {
+    syntax: '<length>';
+    initial-value: 0;
+    inherits: false;
+  }
+}

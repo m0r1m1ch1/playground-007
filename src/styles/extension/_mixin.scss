@@ -1,0 +1,187 @@
+@use 'sass:map';
+@use 'sass:math';
+@use 'sass:meta';
+@use 'functions' as *;
+@use './variables' as var;
+@use './eases' as *;
+
+$break-points: (
+  'sm': 640,
+  'md': 768,
+  'lg': 1024,
+  'xl': 1280,
+  'xxl': 1440,
+) !default;
+
+@function get-break-point($_break-point) {
+  $break-point: meta.inspect($_break-point);
+
+  @if map.has-key($break-points, $_break-point) {
+    $break-point: map.get($break-points, $_break-point);
+  } @else if meta.type-of($_break-point) != 'number' {
+    @error '#{ $_break-point } is not a number.';
+  } @else {
+    $break-point: $_break-point;
+  }
+
+  @return $break-point;
+}
+
+@mixin mq-screen($value) {
+  @media screen and ($value) {
+    @content;
+  }
+}
+
+@mixin mq-gt($_break-point, $unit: px) {
+  $break-point: get-break-point($_break-point);
+
+  @if $unit == 'px' {
+    @media screen and (width > max(#{$break-point}#{$unit}, #{calc($break-point / 16)}rem)) {
+      @content;
+    }
+  } @else {
+    @media screen and (width > #{$break-point}#{$unit}) {
+      @content;
+    }
+  }
+}
+
+@mixin mq-gte($_break-point, $unit: px) {
+  $break-point: get-break-point($_break-point);
+
+  @if $unit == 'px' {
+    @media screen and (width >= max(#{$break-point}#{$unit}, #{calc($break-point / 16)}rem)) {
+      @content;
+    }
+  } @else {
+    @media screen and (width >= #{$break-point}#{$unit}) {
+      @content;
+    }
+  }
+}
+
+@mixin mq-lt($_break-point, $unit: px) {
+  $break-point: get-break-point($_break-point);
+
+  @if $unit == 'px' {
+    @media screen and (width < max(#{$break-point}#{$unit}, #{calc($break-point / 16)}rem)) {
+      @content;
+    }
+  } @else {
+    @media screen and (width < #{$break-point}#{$unit}) {
+      @content;
+    }
+  }
+}
+
+@mixin mq-lte($_break-point, $unit: px) {
+  $break-point: get-break-point($_break-point);
+
+  @if $unit == 'px' {
+    @media screen and (width <= max(#{$break-point}#{$unit}, #{calc($break-point / 16)}rem)) {
+      @content;
+    }
+  } @else {
+    @media screen and (width <= #{$break-point}#{$unit}) {
+      @content;
+    }
+  }
+}
+
+@mixin mq-between($_min, $_max, $unit: px) {
+  $min: get-break-point($_min);
+  $max: get-break-point($_max);
+
+  @if $unit == 'px' {
+    @media screen and (max(#{$min}#{$unit}, #{calc($min / 16)}rem) < width <= max(#{$max}#{$unit}, #{calc($max / 16)}rem)) {
+      @content;
+    }
+  } @else {
+    @media screen and (#{$min}#{$unit} <= width < #{$max}#{$unit}) {
+      @content;
+    }
+  }
+}
+
+@mixin hover {
+  @media (hover: hover) {
+    &:hover {
+      @content;
+    }
+  }
+}
+
+@mixin focus() {
+  &:focus-visible {
+    @content;
+  }
+}
+
+@mixin motion-reduce {
+  @media (prefers-reduced-motion: reduce) {
+    @content;
+  }
+}
+
+@mixin motion-safe {
+  @media (prefers-reduced-motion: no-preference) {
+    @content;
+  }
+}
+
+@mixin container-min-width($px-value) {
+  $rem-value: math.div($px-value, var.$rem);
+
+  @container (min-width: max(#{$px-value}px, #{$rem-value}rem)) {
+    @content;
+  }
+}
+
+@function generate-image-set($image-name) {
+  @return image-set(
+    url('/assets/images/#{$image-name}.webp') 1x,
+    url('/assets/images/#{$image-name}@2x.webp') 2x,
+    url('/assets/images/#{$image-name}@3x.webp') 3x,
+    url('/assets/images/#{$image-name}@4x.webp') 4x
+  );
+}
+
+@mixin text($type: 'root') {
+  @if $type == 'root' {
+    font-size: var(--fz-root);
+    line-height: 1.75;
+    letter-spacing: 0.04em;
+  } @else if $type == 'md' {
+    font-size: var(--fz-md);
+    line-height: 1.6;
+    letter-spacing: 0.04em;
+  } @else if $type == 'sm' {
+    font-size: var(--fz-sm);
+    line-height: 1.7;
+    letter-spacing: 0.04em;
+  } @else if $type == 'xs' {
+    font-size: var(--fz-xs);
+    line-height: 1.7;
+    letter-spacing: 0.04em;
+  }
+}
+
+@mixin noto-sans($weight: 400) {
+  font-family: 'Noto Sans JP', sans-serif;
+  font-style: normal;
+  font-weight: $weight;
+  font-optical-sizing: auto;
+  font-feature-settings: 'palt' on;
+}
+
+@mixin underline-base($size: px(1)) {
+  display: inline;
+  background: linear-gradient(currentcolor, currentcolor) 100% 100% / 0 $size no-repeat;
+  transition: background-size duration(0.4) $power4-out;
+}
+
+@mixin underline-hover($size: px(1)) {
+  background-position: 0 100%;
+  background-size: 100% $size;
+}

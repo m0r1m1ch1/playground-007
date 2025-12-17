@@ -1,0 +1,41 @@
+---
+description: Astro クライアントサイドスクリプトのコーディングルール
+globs:
+alwaysApply: true
+---
+
+# Astro クライアントサイドスクリプトのコーディングルール
+
+- ES2015(ES6) の構文を使用する
+- TypeScript の lint エラー、警告を避ける
+  - TypeScript の型注釈を適切に使用する
+  - プロパティは明示的に型を定義する
+  - 初期化が確実なプロパティには非 Null アサーション演算子（!）を使用する
+  - 初期化が不確実なプロパティには初期値（null など）を設定する
+  - オプショナルチェーン（?.）を適切に使用して型安全性を確保する
+  - 型ガード（if (this.observer) など）を使用して安全にアクセスする
+  - メソッドの戻り値の型は明示的に指定しない
+- 公式サイトのドキュメント（ @https://docs.astro.build/ja/guides/client-side-scripts/ ）のルールに則る
+- `DOMContentLoaded` は不要（公式サイトのドキュメントに則る）
+- コメントは指示がない限り記載しない
+- class 構文を使用する
+  - クラス名の命名は @https://qiita.com/magicant/items/8134edf969f9629fa66e に沿う
+    - `Manager` や `Controller` などは使用しない
+  - プロパティは冒頭で明示的に宣言する
+  - パブリック/プライベートメソッドは明示しない
+  - 初期化処理は `init()` メソッドにまとめる
+  - 複雑な初期化処理は小さなメソッドに分割する
+  - `disconnectedCallback()` などでイベントリスナーを適切に解除する
+  - 関数名はアロー関数を必ず使用する
+- できる限りパフォーマンスの良いイベント処理行う
+  - `window.addEventListener("resize", *);` ではなく `ResizeObserver` を使用する
+    - @https://developer.mozilla.org/ja/docs/Web/API/ResizeObserver
+  - `window.addEventListener("scroll", *);` ではなく `Intersection Observer` を使用する
+    - @https://developer.mozilla.org/ja/docs/Web/API/Intersection_Observer_API
+- 基本的にスクリプトから直接 CSS の値を設定することは避ける
+  - CSS カスタムプロパティを使用して値を設定する
+  - 見た目の状態変化の場合には CSS クラスの切り替えで行う
+    - 状態変化の場合は `is-` のプレフィックスをクラス名に使用する
+    - 要素内の CSS カスタムプロパティは `--_` プレフィックスでプライベート変数として扱う
+- HTML のセレクタ指定は data 属性を指定する
+  - 複数回使用する要素は、コンストラクタや init メソッドでキャッシュする

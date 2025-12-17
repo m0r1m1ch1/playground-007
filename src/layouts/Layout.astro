@@ -1,0 +1,85 @@
+---
+import '@/styles/globals.scss';
+import { getJsonLd, getPageDescription, getPageInfo, getPageTitle } from '@/utils/sitemap';
+import Head from '@/components/layout/Head.astro';
+import Header from './Header.astro';
+import Footer from './Footer.astro';
+
+type Props = {
+  title?: string;
+  description?: string;
+  noIndex?: boolean;
+  class?: string;
+};
+const { title, description, noIndex = false, class: className, ...rest } = Astro.props;
+
+const pathname = Astro.url.pathname;
+const pageInfo = getPageInfo(pathname);
+const jsonLd = getJsonLd(pathname, null);
+const pageTitle = getPageTitle(pageInfo, title);
+const pageDescription = getPageDescription(pageInfo, description);
+const isHome = pageInfo.isHome;
+
+const headProps = {
+  title: pageTitle,
+  description: pageDescription,
+  pathname,
+  isHome,
+  noIndex,
+};
+---
+
+<!doctype html>
+<html lang="ja">
+  <Head {...headProps} />
+  <body>
+    <Header />
+    <main id="main" class:list={[className, 'is-preparing']} {...rest} data-content>
+      <slot />
+    </main>
+    <Footer />
+    {!noIndex && <script type="application/ld+json" set:html={jsonLd} is:inline />}
+  </body>
+</html>
+
+<style lang="scss">
+  @use '@/styles/extension' as *;
+
+  [data-content] {
+    &.is-preparing {
+      opacity: 0;
+    }
+  }
+</style>
+
+<script>
+  import { getVisitState, type VisitState } from '@/utils/visitState';
+
+  class App {
+    visitState: VisitState | undefined = undefined;
+    content: HTMLElement | null = null;
+    constructor() {
+      this.init();
+    }
+
+    init() {
+      this.getElements();
+      this.getVisitState();
+      this.prepare();
+    }
+
+    getElements() {
+      this.content = document.querySelector('[data-content]');
+    }
+
+    getVisitState() {
+      this.visitState = getVisitState();
+      console.log('layout', this.visitState.isNewSession);
+    }
+
+    prepare() {
+      this.content?.classList.remove('is-preparing');
+    }
+  }
+  new App();
+</script>

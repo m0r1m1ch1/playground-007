@@ -1,0 +1,175 @@
+---
+description: CMS データハンドリング、型ルール
+globs:
+alwaysApply: true
+---
+
+## 1. システム構成と責務
+
+### 1.1 データフロー
+
+microCMS → [microcms.ts](mdc:src/libs/microcms.ts) (API Client) → BFF( [bff.ts](mdc:src/libs/bff.ts) ) → Formatter( [apiFormatters.ts](mdc:src/libs/apiFormatters.ts) ) → 表示用データ
+
+### 1.2 各層の責務
+
+1. microcms.ts (API Client)
+
+   - API クライアントの初期化と設定
+   - データフェッチの共通処理
+   - キャッシュ戦略の実装
+   - ページネーション処理
+
+2. bff.ts (Backend for Frontend)
+
+   - API データの集約
+   - 複数リソースの結合
+   - ルーティング用データの生成
+   - キャッシュデータの管理
+
+3. apiFormatters.ts (データ整形)
+   - CMS データから表示用データへの変換
+   - null/undefined 値の適切な処理
+   - 型の安全性確保
+
+## 2. 型定義システム
+
+### 2.1 CMS 型定義（ [microcms.ts](mdc:src/types/microcms.ts) ）
+
+```typescript
+// ベース型の継承
+type IContent = MicroCMSListContent & IContentFields;
+
+// フィールド定義
+type IContentFields = {
+  required: string; // 必須フィールド
+  optional?: string; // 任意フィールド
+  nested: INestedContent; // ネストされたコンテンツ
+};
+```
+
+### 2.2 表示用型定義（ [index.ts](mdc:src/types/index.ts) ）
+
+```typescript
+// 表示用の型定義
+type ContentForDisplay = {
+  id: string;
+  title: string | null; // null許容
+  optional: string | null; // 任意フィールドも明示的にnull許容
+};
+```
+
+## 3. データ変換規則
+
+### 3.1 Null チェックパターン
+
+```typescript
+// Formatter内での変換
+function formatContent(content: IContent): ContentForDisplay {
+  return {
+    id: content.id,
+    title: content.title || null, // 必須フィールドも|| nullで保護
+    optional: content.optional || null, // 任意フィールドも同様
+  };
+}
+```
+
+### 3.2 ネストされたデータの処理
+
+```typescript
+// 再帰的なフォーマット
+function formatNestedContent(content: INestedContent | null) {
+  if (!content) return null;
+  return {
+    ...formatBasicFields(content),
+    children: (content.children || []).map(formatNestedContent),
+  };
+}
+```
+
+## 4. エラー処理とバリデーション
+
+### 4.1 API レスポンスの検証
+
+- 型チェックの実施
+- undefined/null のフォールバック処理
+- エラーログの出力
+
+### 4.2 データの整合性確保
+
+- 必須フィールドの存在確認
+- 関連データの参照整合性チェック
+- デフォルト値の適切な設定
+
+## 5. パフォーマンス最適化
+
+### 5.1 データ取得の最適化
+
+- 必要なフィールドのみの取得
+- ページネーションの適切な実装
+- キャッシュの活用
+
+### 5.2 変換処理の最適化
+
+- 不要なデータの除外
+- メモリ効率の考慮
+- 計算コストの削減
+
+## 6. 保守性のためのプラクティス
+
+### 6.1 型定義の管理
+
+- 明確な命名規則の採用
+- 適切なコメント付与
+- 型の再利用と共通化
+
+### 6.2 変換ロジックの管理
+
+- 単一責任の原則に従う
+- テスト可能な設計
+- 共通処理の抽出
+
+### 6.3 エラーハンドリング
+
+- 一貫したエラー処理パターン
+- 適切なエラーメッセージ
+- フォールバック処理の実装
+
+## 7. オプショナルフィールド処理ガイドライン
+
+### 7.1 型定義
+
+- CMS 型: `field?: Type`
+- 表示用型: `field: Type | null`
+
+### 7.2 フォーマッター関数
+
+- Nullish coalescing (`??`) 演算子を使用
+- 例: `field: source.field ?? null`
+
+### 7.3 コンポーネント
+
+- コンポーネントの型定義に合わせて変換
+- 例: `field={data.field ?? undefined}`
+
+### 7.4 条件付きレンダリング
+
+- `&&` 演算子を使用
+- 例: `{field && <Component />}`
+
+### 7.5 日付処理
+
+- 日付フォーマットは共通関数を使用
+- 例: `formatDate(publishDate, 'YYYY.MM.DD')`
+- 複数の日付候補がある場合は優先順位を明確にする
+- 例: `const publishDate = news.publishDate ?? news.publishedAt ?? news.createdAt;`
+
+### 7.6 エラーハンドリング
+
+- 条件チェックは厳密比較を使用
+- 例: `if (id == null)` （`null` と `undefined` の両方をチェック）
+- 空文字列や 0 などの有効な値を誤って除外しないよう注意
+
+### 7.7 命名規則
+
+- フォーマッター関数は `format〇〇` パターンを使用
+- 例: `formatMovieForList`, `formatDateToDayjs`

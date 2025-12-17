@@ -1,0 +1,75 @@
+@use '../extension' as *;
+@use '../extension/variables' as var;
+
+body {
+  padding-right: var(--scrollbar-width, 0);
+  overflow-y: scroll;
+  font-family: var(--base-font);
+  font-feature-settings: 'palt';
+  color: var(--blue);
+  line-break: strict;
+  word-break: normal;
+  overflow-wrap: anywhere;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  @include noto-sans;
+  @include text('root');
+
+  &.-scroll-lock {
+    position: fixed;
+    left: 0;
+    width: 100vw;
+    height: 100dvh;
+  }
+}
+
+.js-focus-visible :focus:not(.focus-visible) {
+  outline: none;
+}
+
+.js-focus-visible .focus-visible {
+  outline: currentcolor px(2) dashed;
+  outline-offset: px(2);
+}
+
+.pcOnly {
+  display: none;
+
+  @include mq-gte(md) {
+    display: block;
+  }
+}
+
+.spOnly {
+  @include mq-gte(md) {
+    display: none;
+  }
+}
+
+.srOnly {
+  @extend %visually-hidden;
+}
+
+[tabindex='-1'] {
+  @include focus {
+    outline: none;
+  }
+}
+
+dialog {
+  position: fixed;
+  inset: 0;
+
+  // &[open] {
+  //   overflow-y: scroll;
+  // }
+
+  &:not(.is-open) {
+    opacity: 0;
+  }
+
+  &::backdrop {
+    background: initial;
+  }
+}

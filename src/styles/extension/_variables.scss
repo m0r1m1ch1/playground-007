@@ -1,0 +1,9 @@
+$rem: 16;
+$full-liquid: true;
+$max-width: 1440;
+$mq-sm: 575;
+$mq-md: 767;
+$mq-lg: 991;
+$mq-xl: 1420;
+$one-px: if($full-liquid, var(--px), 1px);
+$one-rem: if($full-liquid, var(--rem), 1rem);
