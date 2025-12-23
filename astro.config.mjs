@@ -4,6 +4,7 @@ const env = loadEnv('', process.cwd(), '');
 import sitemap from '@astrojs/sitemap';
 import icon from 'astro-icon';
 import autoprefixer from 'autoprefixer';
+import trqImage from './src/integrations/trq-image';
 
 import react from '@astrojs/react';
 import svgr from 'vite-plugin-svgr';
@@ -15,6 +16,27 @@ export default defineConfig({
     open: true,
   },
   integrations: [
+    trqImage({
+      outputDir: 'assets/images',
+      scales: [
+        {
+          suffix: '',
+          dpr: 0.25,
+        },
+        {
+          suffix: '2x',
+          dpr: 0.5,
+        },
+        {
+          suffix: '3x',
+          dpr: 0.75,
+        },
+        {
+          suffix: '4x',
+          dpr: 1,
+        },
+      ],
+    }),
     react(),
     icon(),
     sitemap({

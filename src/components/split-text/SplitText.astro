@@ -1,0 +1,97 @@
+---
+import type { HTMLAttributes } from "astro/types";
+
+type Props = {
+  text: string;
+} & HTMLAttributes<"span">;
+const { text, ...rest } = Astro.props;
+---
+
+<span {...rest} data-split-text>
+  <span class="srOnly">{text}</span>
+  {
+    [...text].map((char) => (
+      <span class="text" aria-hidden="true" data-split-text-char>
+        {char}
+      </span>
+    ))
+  }
+</span>
+
+<style lang="scss">
+  @use "@/styles/extension" as *;
+
+  [data-split-text] {
+    display: block;
+    overflow: hidden;
+  }
+
+  .text {
+    display: inline-block;
+    opacity: 0;
+    font-size: rem(100);
+    color: white;
+  }
+</style>
+
+<script>
+  import gsap from "gsap";
+  import { swup } from "@/utils/swup";
+
+  class SplitTextChar {
+    splitTexs = document.querySelectorAll<HTMLSpanElement>("[data-split-text-char]");
+    constructor() {
+      this.init();
+    }
+
+    init = () => {
+      this.getElements();
+      this.splitTexs.forEach((text) => {
+        console.log(text);
+      });
+
+      gsap.set(this.splitTexs, {
+        opacity: 1,
+      });
+      // this.splitTexs.forEach((element) => {
+      // });
+
+      swup.onHook("visit:start", (visit) => {
+        gsap.to(this.splitTexs, {
+          yPercent: -100,
+          duration: 1,
+          ease: "power4.inOut",
+          stagger: 0.05,
+        });
+      });
+
+      swup.onHook("content:replace", () => {
+        this.getElements();
+        this.splitTexs.forEach((text) => {
+          console.log(text);
+        });
+
+        gsap.set(this.splitTexs, {
+          yPercent: 100,
+          duration: 1,
+          ease: "power4.inOut",
+          stagger: 0.05,
+          opacity: 1,
+        });
+
+        gsap.to(this.splitTexs, {
+          yPercent: 0,
+          duration: 1,
+          ease: "power4.inOut",
+          stagger: 0.05,
+        });
+      });
+    };
+
+    getElements = () => {
+      this.splitTexs = document.querySelectorAll("[data-split-text-char]");
+    };
+  }
+
+  new SplitTextChar();
+</script>

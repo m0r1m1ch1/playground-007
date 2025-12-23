@@ -1,9 +1,26 @@
+// 1rem 何ピクセルか
 $rem: 16;
+
+// フルリキッドにするか
 $full-liquid: true;
+
+// max-width
 $max-width: 1440;
+
+// Break point
 $mq-sm: 575;
 $mq-md: 767;
 $mq-lg: 991;
 $mq-xl: 1420;
+
+
+
+/**
+  * 1px & 1rem
+  * px() / rem() 関数を使ったときに calc(NUM * var(--px)) / calc(NUM * var(--rem)) と出力されるが、
+  * var(--px) / var(--rem) は最大幅以上での拡大表示のための変数であり、
+  * $full-liquid: false の場合は常に 1px / 1rem となり変数としての意味を持たず
+  * 記述として冗長になるだけなので NUMpx / NUMrem と出力させるため
+  */
 $one-px: if($full-liquid, var(--px), 1px);
 $one-rem: if($full-liquid, var(--rem), 1rem);

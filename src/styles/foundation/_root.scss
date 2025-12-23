@@ -2,12 +2,10 @@
 @use '../extension/variables' as var;
 
 :root {
-  --viewport-width: 100vw;
-  --window-width: calc(tan(atan2(var(--viewport-width), 1px)));
+  --100vw: 100vw;
+  --window-width: calc(tan(atan2(var(--100vw), 1px)));
   --scrollbar-width: 0px;
-  --scroll-offset: 0px;
   --header-height: 0px;
-  --scroll-position: 0px;
 
   @if var.$full-liquid {
     --mw: max(#{var.$max-width}px, #{calc(var.$max-width / var.$rem)}rem);
@@ -19,27 +17,36 @@
 
   --max-width: #{max(px(var.$max-width), rem(var.$max-width))};
   --grid-gutter: #{fluid-size(375, 1440, 20, 40, 'px')};
+  --contentInset: #{fluid-size(375, 1440, 20, 40, 'px')};
 
   // fonts
   --base-font:
     'Hiragino Sans', 'ヒラギノ角ゴ ProN', 'Hiragino Kaku Gothic ProN', 'Hiragino Kaku Gothic Pro', 'メイリオ', meiryo,
     'MS Pゴシック', 'MS PGothic', sans-serif;
-  --fz-root: #{fluid-size(375, 1440, 15, 16, 'rem')};
-  --fz-lg: #{fluid-size(375, 1440, 18, 20, 'rem')};
-  --fz-md: #{fluid-size(375, 1440, 16, 18, 'rem')};
-  --fz-sm: #{fluid-size(375, 1440, 13, 14, 'rem')};
-  --fz-xs: #{fluid-size(375, 1440, 11, 12, 'rem')};
+  --font-ms-sans: 'MS_Sans_Serif', sans-serif;
+  --font-ms-sans-bold: 'MS_Sans_Serif_Bold', sans-serif;
 
   // color
+  --black: #0a0a0a;
   --white: #fff;
-  --black: #222;
+  --teal: #008080;
+  --navy: #000080;
+  --yellow: #fdff4e;
+  --gray: #b8c0c1;
+  --gray-light: #dfdfdf;
+  --gray-dark: #808080;
+  --gray-medium: #c4c4c4;
+  --shadow-width: 2;
+  --page-transition-duration: 0.8s;
+
+  // --page-transition-duration: 2s;
 
   @media (prefers-reduced-motion: no-preference) {
     --duration: 1s;
   }
 }
 
-@property --viewport-width {
+@property --100vw {
   syntax: '<length>';
   initial-value: 0;
   inherits: false;

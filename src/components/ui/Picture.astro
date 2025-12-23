@@ -1,0 +1,127 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+import type { BaseImageProps } from '@/types/globals';
+
+type ImgAttributes = 'src' | 'alt' | 'width' | 'height' | 'loading' | 'decoding' | 'fetchpriority';
+
+type BreakpointKey = 'sm' | 'md' | 'lg' | 'xl' | 'xxl';
+
+type Props = BaseImageProps & {
+  class?: string;
+  loading?: 'lazy' | 'eager';
+  decoding?: 'async' | 'sync' | 'auto';
+  useMobileImages?: boolean;
+  fetchpriority?: 'high' | 'low' | 'auto';
+  imgAttributes?: Omit<HTMLAttributes<'img'>, ImgAttributes>;
+  isFit?: boolean;
+  breakpoints?: BreakpointKey;
+} & Omit<HTMLAttributes<'picture'>, 'className'>;
+
+const {
+  class: className,
+  src,
+  alt,
+  width,
+  height,
+  loading = 'lazy',
+  decoding = 'auto',
+  useMobileImages = false,
+  fetchpriority = 'auto',
+  imgAttributes = {},
+  isFit = false,
+  breakpoints = 'md',
+  ...rest
+}: Props = Astro.props;
+
+const FORMATS = ['avif', 'webp'];
+
+const MEDIA_QUERY_BREAKPOINTS = {
+  sm: { px: 640, rem: '40.00' },
+  md: { px: 768, rem: '48.00' },
+  lg: { px: 1024, rem: '64.00' },
+  xl: { px: 1280, rem: '80.00' },
+  xxl: { px: 1440, rem: '90.00' },
+} as const;
+
+const mobileBreakpoint = MEDIA_QUERY_BREAKPOINTS[breakpoints || 'md'];
+
+const createMediaQuery = (breakpoint: { px: number; rem: string }): string => {
+  return `screen and (min-width: max(${breakpoint.px}px, ${breakpoint.rem}rem))`;
+};
+
+const createImagePathSet = (src: string, format: string) => {
+  const pathParts = src.split('.');
+  pathParts.pop();
+  const basePath = pathParts.join('.');
+
+  const buildPaths = (suffix: string) => {
+    const base = `${basePath}${suffix}`;
+    return {
+      base: `${base}.${format}`,
+      x2: `${base}@2x.${format}`,
+      x3: `${base}@3x.${format}`,
+      x4: `${base}@4x.${format}`,
+    };
+  };
+
+  return {
+    desktop: buildPaths(''),
+    mobile: buildPaths(useMobileImages ? '-sp' : ''),
+  };
+};
+---
+
+<picture class:list={[className, isFit && 'is-fit']} {...rest} data-picture>
+  {
+    FORMATS.map((format) => {
+      const imagePaths = createImagePathSet(src, format);
+      const isSameImage = imagePaths.desktop.base === imagePaths.mobile.base;
+
+      return (
+        <>
+          {!isSameImage && (
+            <source
+              srcset={`${imagePaths.desktop.x2} 2x, ${imagePaths.desktop.x3} 3x, ${imagePaths.desktop.x4} 4x`}
+              media={createMediaQuery(mobileBreakpoint)}
+              type={`image/${format}`}
+            />
+          )}
+          <source
+            srcset={`${imagePaths.mobile.x2} 2x, ${imagePaths.mobile.x3} 3x, ${imagePaths.mobile.x4} 4x`}
+            type={`image/${format}`}
+          />
+        </>
+      );
+    })
+  }
+  {/* フォールバック用img */}
+  <img
+    src={createImagePathSet(src, 'webp').mobile.base}
+    width={width}
+    height={height}
+    alt={alt}
+    loading={loading}
+    decoding={decoding}
+    fetchpriority={fetchpriority}
+    {...imgAttributes}
+    data-picture-img
+  />
+</picture>
+
+<style lang="scss">
+  @use '@/styles/extension' as *;
+
+  [data-picture] {
+    display: block;
+    overflow: clip;
+  }
+
+  img {
+    width: 100%;
+
+    [data-picture].is-fit & {
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+</style>

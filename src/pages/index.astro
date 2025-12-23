@@ -1,23 +1,263 @@
 ---
-import Layout from '../layouts/Layout.astro';
+import Layout from '@/layouts/Layout.astro';
+import Picture from '@/components/ui/Picture.astro';
 ---
 
-<Layout>
-  <div class="home"></div>
+<Layout title="playground007">
+  <div class="container" data-demo>
+    <div class="title-box">
+      <p class="title">Mosaic Effect</p>
+    </div>
+    <div class="bar"></div>
+    <div class="box">
+      <Picture
+        src="/assets/images/sample.webp"
+        width={500}
+        height={500}
+        isFit={true}
+        alt=""
+        class="picture"
+        data-picture
+      />
+      <canvas class="canvas" data-canvas></canvas>
+    </div>
+  </div>
 </Layout>
 
-<script>
-  import { visitState } from '@/utils/visitState';
+<style lang="scss">
+  @use '@/styles/extension' as *;
 
-  class Home {
+  canvas {
+    position: absolute;
+    inset: 0;
+    width: 100% !important;
+    height: 100% !important;
+    pointer-events: none;
+  }
+
+  .container {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    grid-template-rows: min-content min-content 1fr;
+    row-gap: px(2);
+    width: fit-content;
+    height: fit-content;
+    padding: px(6);
+    margin: auto;
+    background-color: var(--gray);
+
+    @include shadow;
+  }
+
+  .title-box {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-auto-flow: column;
+    align-items: center;
+    padding: px(2) px(4);
+    color: var(--white);
+    background-color: var(--navy);
+
+    @include ms-sans;
+  }
+
+  .bar {
+    height: px(4);
+    box-shadow:
+      inset 0 px(calc(var(--shadow-width) * -1)) var(--white),
+      inset 0 px(calc(var(--shadow-width) * 1)) var(--gray-dark);
+  }
+
+  .box {
+    position: relative;
+    display: grid;
+    padding: px(2) 0;
+  }
+
+  .picture {
+    grid-area: 1 / 1 / 1 / 1;
+    opacity: 0;
+  }
+
+  .canvas {
+    grid-area: 1 / 1 / 1 / 1;
+    width: 100%;
+  }
+
+  .lineBox {
+    position: relative;
+    display: grid;
+    grid-auto-flow: column;
+    column-gap: px(3);
+    align-items: center;
+    height: 100%;
+  }
+
+  .line {
+    display: block;
+    width: px(4);
+    height: 100%;
+    box-shadow:
+      inset px(calc(var(--shadow-width) * -1)) 0 var(--white),
+      inset px(calc(var(--shadow-width) * 1)) 0 var(--gray-dark);
+  }
+</style>
+
+<script>
+  import { gsap } from 'gsap';
+
+  class Demo {
+    container: HTMLDivElement | null = null;
+    picture: HTMLPictureElement | null = null;
+    img: HTMLImageElement | null = null;
+    canvas: HTMLCanvasElement | null = null;
+    ctx: CanvasRenderingContext2D | null = null;
+    mosaicSize: number = 20; // モザイクのブロックサイズ（ピクセル）
+    originalImageData: Uint8ClampedArray | null = null;
+    canvasWidth: number = 0;
+    canvasHeight: number = 0;
+
     constructor() {
       this.init();
     }
 
     init() {
-      const value = visitState.isNewSession();
-      console.log('home', value);
+      this.getElements();
+      if (this.img && this.canvas) {
+        this.setupCanvas();
+      }
+    }
+
+    getElements() {
+      this.container = document.querySelector('[data-demo]');
+      if (!this.container) return;
+      this.picture = this.container.querySelector('[data-picture]');
+      this.img = this.container.querySelector('[data-picture-img]');
+      this.canvas = this.container.querySelector('[data-canvas]');
+    }
+
+    setupCanvas() {
+      if (!this.img || !this.canvas) return;
+
+      // 画像の読み込みを待つ
+      if (this.img.complete) {
+        this.initializeCanvas();
+      } else {
+        this.img.addEventListener('load', () => {
+          this.initializeCanvas();
+        });
+      }
+    }
+
+    initializeCanvas() {
+      if (!this.img || !this.canvas) return;
+
+      const img = this.img;
+      const canvas = this.canvas;
+
+      // canvasのサイズを画像のサイズに合わせる
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      this.canvasWidth = canvas.width;
+      this.canvasHeight = canvas.height;
+
+      this.ctx = canvas.getContext('2d');
+      if (!this.ctx) return;
+
+      // 画像をcanvasに描画
+      this.ctx.drawImage(img, 0, 0);
+
+      // 元のImageDataを保存
+      const imageData = this.ctx.getImageData(0, 0, canvas.width, canvas.height);
+      this.originalImageData = imageData.data;
+
+      // 初期モザイクを描画
+      this.drawMosaic();
+
+      // GSAPでモザイクを徐々になくすアニメーション
+      this.animateMosaic();
+    }
+
+    drawMosaic() {
+      if (!this.ctx || !this.originalImageData) return;
+
+      // モザイク効果を適用
+      const mosaicData = this.applyMosaic(this.originalImageData, this.canvasWidth, this.canvasHeight);
+
+      // 処理したデータをcanvasに描画
+      const newImageData = new ImageData(new Uint8ClampedArray(mosaicData), this.canvasWidth, this.canvasHeight);
+      this.ctx.putImageData(newImageData, 0, 0);
+    }
+
+    animateMosaic() {
+      if (!this.canvas || !this.picture) return;
+
+      // モザイクサイズを段階的に小さくする（20 → 15 → 10 → 5 → 1）
+      const steps = [60, 40, 30, 1];
+      const tl = gsap.timeline();
+
+      steps.forEach((size, index) => {
+        tl.call(
+          () => {
+            this.mosaicSize = size;
+            this.drawMosaic();
+          },
+          [],
+          index * 0.3,
+        );
+      });
+    }
+
+    applyMosaic(data: Uint8ClampedArray, width: number, height: number): Uint8ClampedArray {
+      const mosaicData = new Uint8ClampedArray(data.length);
+      const blockSize = this.mosaicSize;
+
+      // ブロックごとに処理
+      for (let blockY = 0; blockY < height; blockY += blockSize) {
+        for (let blockX = 0; blockX < width; blockX += blockSize) {
+          // ブロック内のピクセルの色を平均化
+          let r = 0,
+            g = 0,
+            b = 0,
+            a = 0;
+          let pixelCount = 0;
+
+          // ブロック内のピクセルを集計
+          for (let y = blockY; y < Math.min(blockY + blockSize, height); y++) {
+            for (let x = blockX; x < Math.min(blockX + blockSize, width); x++) {
+              const index = (y * width + x) * 4;
+              r += data[index];
+              g += data[index + 1];
+              b += data[index + 2];
+              a += data[index + 3];
+              pixelCount++;
+            }
+          }
+
+          // 平均値を計算
+          const avgR = Math.round(r / pixelCount);
+          const avgG = Math.round(g / pixelCount);
+          const avgB = Math.round(b / pixelCount);
+          const avgA = Math.round(a / pixelCount);
+
+          // ブロック全体を平均色で塗りつぶす
+          for (let y = blockY; y < Math.min(blockY + blockSize, height); y++) {
+            for (let x = blockX; x < Math.min(blockX + blockSize, width); x++) {
+              const index = (y * width + x) * 4;
+              mosaicData[index] = avgR;
+              mosaicData[index + 1] = avgG;
+              mosaicData[index + 2] = avgB;
+              mosaicData[index + 3] = avgA;
+            }
+          }
+        }
+      }
+
+      return mosaicData;
     }
   }
-  new Home();
+
+  new Demo();
 </script>

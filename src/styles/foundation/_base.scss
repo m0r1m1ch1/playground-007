@@ -1,31 +1,46 @@
 @use '../extension' as *;
 @use '../extension/variables' as var;
 
+html,
+body {
+  height: 100%;
+}
+
 body {
   padding-right: var(--scrollbar-width, 0);
-  overflow-y: scroll;
-  font-family: var(--base-font);
+
+  // overflow: clip;
+  // overflow-y: scroll;
+  font-family: var(--font-ms-sans-bold);
   font-feature-settings: 'palt';
-  color: var(--blue);
-  line-break: strict;
+  color: var(--base-color);
   word-break: normal;
   overflow-wrap: anywhere;
+  line-break: strict;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-
-  @include noto-sans;
-  @include text('root');
+  background-color: var(--teal);
 
   &.-scroll-lock {
     position: fixed;
     left: 0;
     width: 100vw;
     height: 100dvh;
+    overflow: hidden;
   }
 }
 
-.js-focus-visible :focus:not(.focus-visible) {
-  outline: none;
+main {
+  min-height: 100dvh;
+}
+
+footer {
+  // position: sticky;
+  // top: 100vh;
+}
+
+summary {
+  cursor: pointer;
 }
 
 .js-focus-visible .focus-visible {
@@ -60,16 +75,23 @@ body {
 dialog {
   position: fixed;
   inset: 0;
+  transition: opacity duration(0.001) $power4-out;
 
-  // &[open] {
-  //   overflow-y: scroll;
-  // }
-
-  &:not(.is-open) {
+  &:not(.open) {
     opacity: 0;
+  }
+
+  &[open] {
+    overflow-y: scroll;
   }
 
   &::backdrop {
     background: initial;
   }
+}
+
+.page-transition {
+  // transition-delay: var(--page-transition-duration) * 10;
+  // transition: all var(--page-transition-duration);
+  transition-delay: calc(var(--page-transition-duration));
 }
