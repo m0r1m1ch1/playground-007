@@ -4,22 +4,24 @@ import Picture from '@/components/ui/Picture.astro';
 ---
 
 <Layout title="playground007">
-  <div class="container" data-demo>
-    <div class="title-box">
-      <p class="title">Mosaic Effect</p>
-    </div>
-    <div class="bar"></div>
-    <div class="box">
-      <Picture
-        src="/assets/images/sample.webp"
-        width={500}
-        height={500}
-        isFit={true}
-        alt=""
-        class="picture"
-        data-picture
-      />
-      <canvas class="canvas" data-canvas></canvas>
+  <div class="container">
+    <div class="window" data-demo>
+      <div class="title-box">
+        <p class="title">Mosaic Effect</p>
+      </div>
+      <div class="bar"></div>
+      <div class="box">
+        <Picture
+          src="/assets/images/sample.webp"
+          width={500}
+          height={500}
+          isFit={true}
+          alt=""
+          class="picture"
+          data-picture
+        />
+        <canvas class="canvas" data-canvas></canvas>
+      </div>
     </div>
   </div>
 </Layout>
@@ -36,13 +38,19 @@ import Picture from '@/components/ui/Picture.astro';
   }
 
   .container {
-    position: fixed;
-    inset: 0;
+    display: grid;
+    place-items: center;
+    height: 100svh;
+    container-type: inline-size;
+  }
+
+  .window {
     display: grid;
     grid-template-rows: auto 1fr;
     grid-template-rows: min-content min-content 1fr;
     row-gap: px(2);
     width: fit-content;
+    width: min(100cqw, 50%);
     height: fit-content;
     padding: px(6);
     margin: auto;
