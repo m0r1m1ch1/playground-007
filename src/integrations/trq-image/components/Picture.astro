@@ -1,0 +1,136 @@
+---
+// @ts-ignore virtual module
+import { config } from 'virtual:astro-trq-image';
+import type { Scales, Formats } from '../vite-plugin-trq-image-resize';
+import type { HTMLAttributes } from 'astro/types';
+import { parseFileName } from '../utils';
+
+type Props = {
+  src: string;
+  alt: string;
+  width: number;
+  height: number;
+  useOriginal?: boolean;
+  media?: {
+    srcset: {
+      suffix: string;
+      dpi: number;
+    }[];
+    media: string;
+  }[];
+} & HTMLAttributes<'img'>;
+
+const FORMATS_ORDER = {
+  jpg: 1,
+  jpeg: 2,
+  png: 3,
+  webp: 4,
+  avif: 5,
+};
+
+const { src, alt, width, height, useOriginal, media: _media, ...rest } = Astro.props;
+
+const _scales = config.scales as Scales;
+const formats = (config.formats as Formats).sort((a, b) => {
+  if (FORMATS_ORDER[a] > FORMATS_ORDER[b]) return 1;
+  if (FORMATS_ORDER[a] < FORMATS_ORDER[b]) return -1;
+  return 0;
+});
+
+const ext = src.split('.').pop();
+const _maxDpr = Math.max(..._scales.map((s) => s.dpr));
+const { nameArray, maxRatio } = parseFileName(src);
+const baseName = nameArray.join('@');
+const scales = _scales
+  .filter((s) => s.dpr <= _maxDpr / maxRatio)
+  .sort((a, b) => {
+    if (a.dpr > b.dpr) return 1;
+    if (a.dpr < b.dpr) return -1;
+    return 0;
+  });
+const minSuffix = scales[0].suffix || '';
+const externalImage = !src.startsWith(`/${config.outputDir}/`);
+const scaleSuffixes = scales.map((s) => s.suffix);
+const media = (_media || [])
+  .map((m) => ({
+    srcset: m.srcset.filter((src) => scales.some((s) => s.suffix === src.suffix)),
+    media: m.media,
+  }))
+  .filter((m) => m.srcset.length > 0);
+
+const getSrcSet = (suffixes: string[], format: string, excludeMin: boolean = false) => {
+  return suffixes
+    .filter((suffix) => !excludeMin || suffix !== minSuffix)
+    .map((suffix) => `${baseName}${suffix ? '@' + suffix : ''}.${format} ${suffix || '1x'}`)
+    .join(', ');
+};
+
+const getMediaSrcSet = (
+  srcset: {
+    suffix: string;
+    dpi: number;
+  }[],
+  format: string,
+) => {
+  return srcset
+    .map(
+      (src) => `${baseName}${src.suffix ? '@' + src.suffix : ''}.${format} ${`${src.dpi || 1}x`}`,
+    )
+    .join(', ');
+};
+---
+
+<>
+  {
+    externalImage || ext === 'svg' ? (
+      <img src={src} width={width} height={height} alt={alt} {...rest} />
+    ) : useOriginal ? (
+      <img src={`${baseName}@raw.${ext}`} width={width} height={height} alt={alt} {...rest} />
+    ) : (
+      <picture>
+        {formats.reverse().map((format) => {
+          if (format !== formats[formats.length - 1]) {
+            return (
+              <>
+                {(media || []).map((m) => (
+                  <source
+                    srcset={getMediaSrcSet(m.srcset, format)}
+                    media={m.media}
+                    type={`image/${format === 'jpg' ? 'jpeg' : format}`}
+                  />
+                ))}
+                <source
+                  srcset={getSrcSet(scaleSuffixes, format, false)}
+                  type={`image/${format === 'jpg' ? 'jpeg' : format}`}
+                />
+              </>
+            );
+          } else {
+            return (
+              <>
+                {(media || []).map((m) => (
+                  <source
+                    srcset={getMediaSrcSet(m.srcset, format)}
+                    media={m.media}
+                    type={`image/${format === 'jpg' ? 'jpeg' : format}`}
+                  />
+                ))}
+                <source
+                  srcset={getSrcSet(scaleSuffixes, format, true)}
+                  type={`image/${format === 'jpg' ? 'jpeg' : format}`}
+                />
+                <img
+                  src={`${baseName}${minSuffix ? '@' + minSuffix : ''}.${format}`}
+                  width={width}
+                  height={height}
+                  alt={alt}
+                  {...rest}
+                />
+              </>
+            );
+          }
+        })}
+      </picture>
+    )
+  }
+</>

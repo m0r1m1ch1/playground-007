@@ -4,7 +4,7 @@ const env = loadEnv('', process.cwd(), '');
 import sitemap from '@astrojs/sitemap';
 import icon from 'astro-icon';
 import autoprefixer from 'autoprefixer';
-import trqImage from './src/integrations/trq-image';
+import trqImage from '@/integrations/trq-image';
 
 import react from '@astrojs/react';
 import svgr from 'vite-plugin-svgr';
